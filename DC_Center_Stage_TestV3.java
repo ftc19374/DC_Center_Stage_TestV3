@@ -35,6 +35,7 @@ public class DC_Center_Stage_TestV3 extends LinearOpMode{
     float DroneS = 0; //Servo Power Variable for Drone
     float DroneM = 0; //Motor Power Variable for Drone
     float HPower = 0; //Hanging mechanism Power Variable
+    double Cspeed = 1; //chassis speed variable
     @Override
     public void runOpMode() {
 
@@ -64,15 +65,21 @@ public class DC_Center_Stage_TestV3 extends LinearOpMode{
             double rx = gamepad1.right_stick_x;
 
 
-            Front_Right_Wheel.setPower(y + x + rx);
-            Front_Left_Wheel.setPower((y - x - rx));
-            Back_Left_Wheel.setPower((y + x -  rx));
-            Back_Right_Wheel.setPower(y - x + rx);
+            Front_Right_Wheel.setPower((y + x + rx)*Cspeed);
+            Front_Left_Wheel.setPower((y - x - rx)*Cspeed);
+            Back_Left_Wheel.setPower((y + x -  rx)*Cspeed);
+            Back_Right_Wheel.setPower((y - x + rx)*Cspeed);
 
+            if (gamepad1.dpad_up) {
+                Cspeed = 1;
+            }
+            else if (gamepad1.dpad_down) {
+                Cspeed = 0.5;
+            }
             //5th motor controls intake via the left and right bumpers
             // right bumper on gamepad 1 adds power to intake motor to draw in pixels
             if (gamepad1.right_bumper) {
-                IPower = 1;  //Starts intake Mechanism; pulls pixels in
+                IPower = 0.85;  //Starts intake Mechanism; pulls pixels in
                 Intake_Motor.setPower(IPower);
             }
             //left bumper on gamepad 1 pushes pixels out to prevent control of too many pixels at once
@@ -86,30 +93,38 @@ public class DC_Center_Stage_TestV3 extends LinearOpMode{
                 Intake_Motor.setPower(IPower);
             }
             //raise and lower the lift to be able to reach higher on the backdrop
-            if (gamepad2.left_trigger >= 0.5 && Lift_Motor.getCurrentPosition() > 0) {
+            if (gamepad2.left_trigger >= 0.5 /*&& Lift_Motor.getCurrentPosition() < 0*/) {
                 //left trigger on gamepad 2 moves the lift down & includes position statements to prevent lift from going too far down
                 LPower = 1;
+                Lift_Motor.setTargetPosition(0);
+                Lift_Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 Lift_Motor.setPower(LPower);
-            } else if (gamepad2.right_trigger >= 0.5 && Lift_Motor.getCurrentPosition() <= 2950) {
+                sleep(2000);
+                Lift_Motor.setPower(0);
+                Lift_Motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            } else if (gamepad2.right_trigger >= 0.5 /*&& Lift_Motor.getCurrentPosition() >= -2950*/) {
                 //right trigger on gamepad 2 moves lift up & includes position statements to prevent lift from going too far up
                 LPower = -1;
+                Lift_Motor.setTargetPosition(-2950);
+                Lift_Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 Lift_Motor.setPower(LPower);
-            }else{
+                sleep(2000);
                 Lift_Motor.setPower(0);
+                Lift_Motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
 
 
             //Open and close the box function to drop pixels into backdrop
             if (gamepad2.left_bumper) {
                 //left bumper on gamepad 2 opens the box
-                BPosition = 90;
-                Box_Servo.setPosition(BPosition);
-                sleep(250);
+                BPosition = 1f;
+                Box_Servo.setPosition(0.5);
+
             }
             if (gamepad2.right_bumper) {
                 //right bumper on gamepad 2 closes the box
-                BPosition = 0;
-                Box_Servo.setPosition(BPosition);
+                BPosition = 1;
+                Box_Servo.setPosition(1);
 
             }
             //Launch the drone from the robot using a servo and a motor
